@@ -29,7 +29,7 @@ service cloud.firestore {
 
     // Validate Log Entry
     function isValidLogEntry(data, userId) {
-      return data.keys().hasAll(['timestamp', 'solarVolts', 'solarAmps', 'solarWatts', 'inverterAmps', 'inverterWatts', 'efficiency', 'systemMode', 'weather', 'userId'])
+      return data.keys().hasAll(['timestamp', 'solarVolts', 'solarAmps', 'solarWatts', 'inverterAmps', 'inverterWatts', 'efficiency', 'userId'])
         && data.keys().size() <= 15
         && data.userId == userId
         && data.timestamp is string
@@ -39,8 +39,8 @@ service cloud.firestore {
         && data.inverterAmps is number
         && data.inverterWatts is number
         && data.efficiency is number
-        && data.systemMode in ['grid-tied', 'hybrid', 'off-grid']
-        && data.weather is string;
+        && (!('systemMode' in data) || data.systemMode in ['grid-tied', 'hybrid', 'off-grid'])
+        && (!('weather' in data) || data.weather is string);
     }
 
     // Match path for User documents

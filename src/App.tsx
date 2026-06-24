@@ -25,7 +25,8 @@ import {
   User,
   LogIn,
   LogOut,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 
 // Firebase core modules and references
@@ -37,7 +38,8 @@ import {
   User as FirebaseUser 
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, deleteDoc, getDocs, writeBatch, query, orderBy } from 'firebase/firestore';
-import { auth, db, googleProvider } from './lib/firebase';
+import { auth, db, googleProvider, OperationType, handleFirestoreError } from './lib/firebase';
+import { getApiUrl } from './lib/api';
 
 export default function App() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -45,6 +47,7 @@ export default function App() {
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [seeding, setSeeding] = useState<boolean>(false);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   // Firebase Auth states
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
@@ -151,6 +154,7 @@ export default function App() {
           }
         } catch (err) {
           console.error("Firestore loading error: ", err);
+          handleFirestoreError(err, OperationType.GET, `users/${firebaseUser.uid}`);
         }
       } else {
         setCurrentUser(null);
@@ -187,6 +191,7 @@ export default function App() {
         }, { merge: true });
       } catch (err) {
         console.error("Failed to update system mode in Firestore", err);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
       }
     }
   };
@@ -204,6 +209,7 @@ export default function App() {
         }, { merge: true });
       } catch (err) {
         console.error("Failed to update utility rate in Firestore", err);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
       }
     }
   };
@@ -220,6 +226,7 @@ export default function App() {
         }, { merge: true });
       } catch (err) {
         console.error("Failed to update array capacity in Firestore", err);
+        handleFirestoreError(err, OperationType.UPDATE, `users/${auth.currentUser.uid}`);
       }
     }
   };
@@ -343,7 +350,10 @@ export default function App() {
         setDoc(doc(db, 'users', auth.currentUser.uid, 'logs', newLiveLog.id), {
           ...logData,
           userId: auth.currentUser.uid
-        }).catch(err => console.error("Error saving live log to Firestore:", err));
+        }).catch(err => {
+          console.error("Error saving live log to Firestore:", err);
+          handleFirestoreError(err, OperationType.WRITE, `users/${auth.currentUser?.uid}/logs/${newLiveLog.id}`);
+        });
       }
 
       setLogs((prev) => {
@@ -388,6 +398,7 @@ export default function App() {
         });
       } catch (err) {
         console.error("Failed to add log to Firestore:", err);
+        handleFirestoreError(err, OperationType.CREATE, `users/${auth.currentUser.uid}/logs/${logId}`);
       }
     }
   };
@@ -402,6 +413,7 @@ export default function App() {
         await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'logs', id));
       } catch (err) {
         console.error("Failed to delete log from Firestore:", err);
+        handleFirestoreError(err, OperationType.DELETE, `users/${auth.currentUser.uid}/logs/${id}`);
       }
     }
   };
@@ -420,6 +432,7 @@ export default function App() {
         await batch.commit();
       } catch (err) {
         console.error("Failed to clear logs from Firestore:", err);
+        handleFirestoreError(err, OperationType.DELETE, `users/${auth.currentUser.uid}/logs`);
       }
     }
   };
@@ -428,7 +441,7 @@ export default function App() {
   const handleImportSeedLogs = async () => {
     setSeeding(true);
     try {
-      const res = await fetch("/api/seed-logs");
+      const res = await fetch(getApiUrl("/api/seed-logs"));
       if (!res.ok) {
         throw new Error("Server failed to generate seed logs.");
       }
@@ -447,7 +460,11 @@ export default function App() {
             userId: auth.currentUser!.uid
           });
         });
-        await batch.commit();
+        try {
+          await batch.commit();
+        } catch (err) {
+          handleFirestoreError(err, OperationType.WRITE, `users/${auth.currentUser.uid}/logs`);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -947,10 +964,16 @@ export default function App() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => {
+                      setAuthError(null);
                       signInWithPopup(auth, googleProvider)
                         .catch((err) => {
                           console.log("Google Sign-In blocked/failed. Falling back to anonymous login.", err);
-                          signInAnonymously(auth);
+                          signInAnonymously(auth).catch((anonErr) => {
+                            console.error("Anonymous Sign-In failed too:", anonErr);
+                            setAuthError(
+                              "Google Sign-In failed/blocked. Automatic Guest fallback also failed because the Anonymous Sign-In provider is disabled in your Firebase Console configuration."
+                            );
+                          });
                         });
                     }}
                     className="text-[10px] font-mono font-bold text-slate-950 bg-emerald-500 hover:bg-emerald-400 border border-emerald-600 px-3.5 py-2 flex items-center gap-1.5 transition-all uppercase cursor-pointer"
@@ -960,7 +983,15 @@ export default function App() {
                     CLOUD SYNC
                   </button>
                   <button
-                    onClick={() => signInAnonymously(auth)}
+                    onClick={() => {
+                      setAuthError(null);
+                      signInAnonymously(auth).catch((err) => {
+                        console.error("Anonymous Sign-In failed:", err);
+                        setAuthError(
+                          "Guest/Anonymous login failed because the 'Anonymous' provider is disabled in your Firebase Authentication settings."
+                        );
+                      });
+                    }}
                     className="text-[9px] font-mono font-bold text-slate-400 hover:text-white bg-[#1A1C20] hover:bg-slate-800 border border-slate-800 px-2 py-2 transition-all uppercase cursor-pointer"
                     title="Log in anonymously as a Guest Analyst"
                   >
@@ -972,6 +1003,40 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* Auth and Connection Error Banner */}
+      {authError && (
+        <div className="max-w-7xl mx-auto px-6 mt-4">
+          <div className="bg-red-500/10 border border-red-500/30 p-4 text-xs text-red-400 flex items-start justify-between gap-3">
+            <div className="flex gap-2">
+              <AlertTriangle size={16} className="shrink-0 mt-0.5 text-red-500" />
+              <div>
+                <p className="font-bold uppercase tracking-wider text-[10px]">Database Authentication Constraint</p>
+                <p className="mt-1 leading-relaxed text-slate-300">
+                  {authError}
+                </p>
+                <div className="mt-2 text-[9px] text-slate-500 leading-relaxed font-sans max-w-4xl space-y-1">
+                  <p><strong>Recommended Next Steps:</strong></p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    <li>
+                      <strong>Enable Anonymous Sign-In:</strong> Go to your <a href={`https://console.firebase.google.com/project/${auth.app.options.projectId}/authentication/providers`} target="_blank" rel="noopener noreferrer" className="text-yellow-500 hover:underline font-bold">Firebase Console &rarr; Authentication &rarr; Sign-in method</a> and enable the <strong>Anonymous</strong> provider.
+                    </li>
+                    <li>
+                      <strong>Google Sign-In Popup Support:</strong> Browsers block third-party popups inside iframes. To use Google Account sync, click the <strong>Open in New Tab</strong> button at the top-right corner of the screen and try again.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setAuthError(null)}
+              className="text-slate-500 hover:text-white uppercase font-bold text-[9px] px-2 py-1 border border-slate-800 bg-[#14161C] cursor-pointer"
+            >
+              DISMISS
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-6 mt-8 space-y-8">

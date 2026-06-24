@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Markdown from 'react-markdown';
 import { LogEntry, AIAnalysisReport } from '../types';
 import { Cpu, RefreshCw, AlertCircle, FileText, CheckCircle, Sparkles, BookOpen } from 'lucide-react';
+import { getApiUrl } from '../lib/api';
 
 interface AIAnalystProps {
   logs: LogEntry[];
@@ -44,7 +45,7 @@ export const AIAnalyst: React.FC<AIAnalystProps> = ({ logs, systemCapacityW }) =
     setReport(null);
 
     try {
-      const response = await fetch("/api/analyze-performance", {
+      const response = await fetch(getApiUrl("/api/analyze-performance"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ logs, systemCapacityW })

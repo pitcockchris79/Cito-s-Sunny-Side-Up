@@ -36,7 +36,7 @@
         "weather": { "type": "string" },
         "userId": { "type": "string" }
       },
-      "required": ["timestamp", "solarVolts", "solarAmps", "solarWatts", "inverterAmps", "inverterWatts", "efficiency", "systemMode", "weather", "userId"]
+      "required": ["timestamp", "solarVolts", "solarAmps", "solarWatts", "inverterAmps", "inverterWatts", "efficiency", "userId"]
     }
   },
   "firestore": {
