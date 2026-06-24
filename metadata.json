@@ -1,0 +1,6 @@
+{
+  "name": "Sunny Side Up",
+  "description": "A high-fidelity dashboard and logger for solar panel outputs and inverter conversion metrics. Includes efficiency metrics, interactive charts, and AI-powered performance diagnostics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

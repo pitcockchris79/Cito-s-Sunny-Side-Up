@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with configuration parameters.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "systemMode": { "type": "string", "enum": ["grid-tied", "hybrid", "off-grid"] },
+        "utilityRate": { "type": "number" },
+        "systemCapacityW": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "systemMode", "utilityRate", "systemCapacityW"]
+    },
+    "LogEntry": {
+      "title": "LogEntry",
+      "description": "A single solar inverter telemetry log record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "solarVolts": { "type": "number" },
+        "solarAmps": { "type": "number" },
+        "solarWatts": { "type": "number" },
+        "inverterAmps": { "type": "number" },
+        "inverterWatts": { "type": "number" },
+        "efficiency": { "type": "number" },
+        "panelTemp": { "type": "number" },
+        "gridFreq": { "type": "number" },
+        "batterySoC": { "type": "number" },
+        "systemMode": { "type": "string", "enum": ["grid-tied", "hybrid", "off-grid"] },
+        "weather": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["timestamp", "solarVolts", "solarAmps", "solarWatts", "inverterAmps", "inverterWatts", "efficiency", "systemMode", "weather", "userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Store user configuration and profile details"
+    },
+    "/users/{userId}/logs/{logId}": {
+      "schema": "LogEntry",
+      "description": "Telemetry logs associated with the specific user"
+    }
+  }
+}

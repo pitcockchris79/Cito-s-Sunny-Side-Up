@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if ID is valid
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+    
+    // Check if user is authenticated and is the owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Validate User Profile
+    function isValidUser(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'systemMode', 'utilityRate', 'systemCapacityW'])
+        && data.keys().size() <= 8
+        && data.uid == userId
+        && data.email is string
+        && data.systemMode in ['grid-tied', 'hybrid', 'off-grid']
+        && data.utilityRate is number
+        && data.utilityRate >= 0.0
+        && data.utilityRate <= 10.0
+        && data.systemCapacityW is number
+        && data.systemCapacityW >= 0
+        && data.systemCapacityW <= 100000;
+    }
+
+    // Validate Log Entry
+    function isValidLogEntry(data, userId) {
+      return data.keys().hasAll(['timestamp', 'solarVolts', 'solarAmps', 'solarWatts', 'inverterAmps', 'inverterWatts', 'efficiency', 'systemMode', 'weather', 'userId'])
+        && data.keys().size() <= 15
+        && data.userId == userId
+        && data.timestamp is string
+        && data.solarVolts is number
+        && data.solarAmps is number
+        && data.solarWatts is number
+        && data.inverterAmps is number
+        && data.inverterWatts is number
+        && data.efficiency is number
+        && data.systemMode in ['grid-tied', 'hybrid', 'off-grid']
+        && data.weather is string;
+    }
+
+    // Match path for User documents
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser(request.resource.data, userId);
+      allow delete: if isOwner(userId);
+      
+      // Match path for User logs subcollection
+      match /logs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(logId) && isValidLogEntry(request.resource.data, userId);
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+    }
+  }
+}
