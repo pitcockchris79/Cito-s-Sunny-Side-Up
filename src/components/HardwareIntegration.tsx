@@ -508,7 +508,7 @@ void handleTelemetryRoute() {
   json += "\\"inverterAmps\\":" + String(ac_current, 2) + ",";
   json += "\\"inverterWatts\\":" + String(ac_power, 0) + ",";
   json += "\\"efficiency\\":" + String(conversion_efficiency, 1) + ",";
-  json += "\\"lossWatts\\":" + String(max(0.0f, pv_power - ac_power), 0) + ",";
+  json += "\\"lossWatts\\":" + String(pv_power > ac_power ? (pv_power - ac_power) : 0.0f, 0) + ",";
   json += "\\"panelTemp\\":" + String(panel_temp, 0) + ",";
   json += "\\"gridFreq\\":60.0,";
   json += "\\"weather\\":\\"sunny\\"";
@@ -639,7 +639,7 @@ void readAnalogDCCurrent() {
   float sensorVolt = ads.computeVolts(adc1);
   
   // Convert voltage signal back into current
-  pv_current = abs((sensorVolt - ACS758_VREF) / ACS758_SENSITIVITY);
+  pv_current = fabs((sensorVolt - ACS758_VREF) / ACS758_SENSITIVITY);
   
   if (pv_current < 0.15) pv_current = 0.0; // Filter noise threshold
   Serial.printf("DC Current Sensor Pin: %.3fV | Solved Amps: %.2fA\\n", sensorVolt, pv_current);
@@ -660,7 +660,7 @@ void readACLineTelemetry() {
   }
   
   // Simple calibration mapping peak AC voltage signal to line voltage
-  float peak_sig = abs(max_voltage - 1.65); // assume 1.65V offset bias
+  float peak_sig = fabs(max_voltage - 1.65); // assume 1.65V offset bias
   ac_voltage = peak_sig * 170.0; // calibrate transformer factor to 120/240V
   if (ac_voltage < 40.0) ac_voltage = 0.0; // offline check
 
@@ -704,7 +704,7 @@ void handleTelemetryRoute() {
   json += "\\"inverterAmps\\":" + String(ac_current, 2) + ",";
   json += "\\"inverterWatts\\":" + String(ac_power, 0) + ",";
   json += "\\"efficiency\\":" + String(conversion_efficiency, 1) + ",";
-  json += "\\"lossWatts\\":" + String(max(0.0f, pv_power - ac_power), 0) + ",";
+  json += "\\"lossWatts\\":" + String(pv_power > ac_power ? (pv_power - ac_power) : 0.0f, 0) + ",";
   json += "\\"panelTemp\\":" + String(panel_temp, 0) + ",";
   json += "\\"gridFreq\\":60.0,";
   json += "\\"weather\\":\\"cloudy\\"";

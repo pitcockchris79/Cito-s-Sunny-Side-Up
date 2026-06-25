@@ -700,3 +700,13 @@ MAX485 Flow Control Timing: The basic MAX485 chip requires you to manually pull 
 Tip: Buy a MAX485 module with automatic flow control (typically red modules with 5 pins on the TTL side). They handle the TX/RX switching automatically in hardware, requiring only TX, RX, VCC, and GND pins.
 
 
+If you still see 2 errors when compiling in your Arduino IDE, they are almost certainly due to missing external libraries on your local machine. Ensure you install these via the Arduino Library Manager (Tools ➔ Manage Libraries...):
+For Scenario A (Modbus RTU):
+Error: ModbusMaster.h: No such file or directory ➔ Search and install "ModbusMaster" (by Doc Walker).
+Error: DallasTemperature.h: No such file or directory ➔ Search and install "DallasTemperature" (by Miles Burton) and its dependency "OneWire" (by Paul Stoffregen).
+For Scenario B (Analog ADC Sampling):
+Error: Adafruit_ADS1X15.h: No such file or directory ➔ Search and install "Adafruit ADS1X15" (by Adafruit).
+
+
+
+
