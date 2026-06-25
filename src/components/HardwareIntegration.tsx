@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cpu, Terminal, Layers, Wifi, Copy, Check, List, HelpCircle, HardDrive, Settings, Zap, Sun, Activity, Play, RefreshCw, AlertCircle, CheckCircle2, Info, ChevronRight } from 'lucide-react';
+import { Cpu, Terminal, Layers, Wifi, Copy, Check, List, HelpCircle, HardDrive, Settings, Zap, Sun, Activity, Play, RefreshCw, AlertCircle, CheckCircle2, Info, ChevronRight, Search, ExternalLink } from 'lucide-react';
 
 export function HardwareIntegration() {
   const [selectedScenario, setSelectedScenario] = useState<'modbus' | 'analog'>('modbus');
@@ -215,21 +215,93 @@ export function HardwareIntegration() {
   const getBOM = () => {
     if (selectedScenario === 'modbus') {
       return [
-        { name: 'ESP32-S3 Development Board', spec: 'Dual-core 240MHz, 4MB Flash, Wi-Fi & BLE', purpose: 'Core processor, handles networking, Modbus transceiver polling, and web server.', cost: '$6.00' },
-        { name: 'RS485 to TTL MAX485 Converter', spec: '5V TTL to RS485 converter, auto flow control recommended', purpose: 'Bridges hardware Serial from ESP32 to the RS485 balanced lines of the inverter/MPPT.', cost: '$2.50' },
-        { name: 'DS18B20 Waterproof Temp Probe', spec: '1-Wire interface, stainless steel cap, -55°C to +125°C', purpose: 'Clamps directly to PV backsheet to measure cell surface temperature.', cost: '$3.50' },
-        { name: '4.7kΩ Resistor', spec: '1/4W Metal Film', purpose: 'Pull-up resistor for DS18B20 1-Wire signal line.', cost: '$0.10' },
-        { name: 'Mean Well HDR-15-5 PSU (or equivalent)', spec: 'DIN-Rail 100-240VAC to 5VDC 2.4A', purpose: 'Step-down power to drive ESP32 and transceiver directly from household grid or battery bank (via buck).', cost: '$12.00' },
+        { 
+          name: 'ESP32-S3 Development Board', 
+          spec: 'Dual-core 240MHz, 4MB Flash, Wi-Fi & BLE', 
+          purpose: 'Core processor, handles networking, Modbus transceiver polling, and web server.', 
+          cost: '$6.00',
+          amazonSearch: 'ESP32-S3 development board Type-C'
+        },
+        { 
+          name: 'RS485 to TTL MAX485 Converter', 
+          spec: '5V TTL to RS485 converter, auto flow control recommended', 
+          purpose: 'Bridges hardware Serial from ESP32 to the RS485 balanced lines of the inverter/MPPT.', 
+          cost: '$2.50',
+          amazonSearch: 'MAX485 TTL to RS485 converter auto flow'
+        },
+        { 
+          name: 'DS18B20 Waterproof Temp Probe', 
+          spec: '1-Wire interface, stainless steel cap, -55°C to +125°C', 
+          purpose: 'Clamps directly to PV backsheet to measure cell surface temperature.', 
+          cost: '$3.50',
+          amazonSearch: 'DS18B20 waterproof temperature sensor probe'
+        },
+        { 
+          name: '4.7kΩ Resistor', 
+          spec: '1/4W Metal Film', 
+          purpose: 'Pull-up resistor for DS18B20 1-Wire signal line.', 
+          cost: '$0.10',
+          amazonSearch: '4.7k ohm resistor 1/4w metal film'
+        },
+        { 
+          name: 'Mean Well HDR-15-5 PSU (or equivalent)', 
+          spec: 'DIN-Rail 100-240VAC to 5VDC 2.4A', 
+          purpose: 'Step-down power to drive ESP32 and transceiver directly from household grid or battery bank (via buck).', 
+          cost: '$12.00',
+          amazonSearch: 'Mean Well HDR-15-5 5v power supply'
+        },
       ];
     } else {
       return [
-        { name: 'ESP32-S3 Development Board', spec: 'Dual-core 240MHz, 4MB Flash, Wi-Fi & BLE', purpose: 'Core processor, runs ADC sampling, thermistor math, and web API.', cost: '$6.00' },
-        { name: 'ACS758 (or ACS712) Current Sensor', spec: 'Hall-effect current shunt, bidirectional, 50A/100A options', purpose: 'Measures high-current DC output from the array before inverter input.', cost: '$8.50' },
-        { name: 'Voltage Divider Network (Custom/Module)', spec: '100kΩ / 10kΩ metal film precision resistors (0.1% tolerance)', purpose: 'Steps down high solar DC voltage (e.g. 0-150V) to a safe 0-3.3V range for the ESP32 ADC.', cost: '$1.00' },
-        { name: 'SCT-013-000 Non-Invasive CT Sensor', spec: '100A/50mA split-core AC Current Transformer', purpose: 'Clamped around the inverter output AC live line to calculate output amps safely.', cost: '$9.00' },
-        { name: 'ZMPT101B AC Voltage Sensor Module', spec: 'Active single-phase AC voltage transformer', purpose: 'Samples live utility line voltage safely for AC output wattage calculation.', cost: '$4.50' },
-        { name: 'DS18B20 Waterproof Temp Probe', spec: '1-Wire interface, stainless steel cap', purpose: 'Clamps directly to PV backsheet to measure cell surface temperature.', cost: '$3.50' },
-        { name: 'ADS1115 External ADC (Recommended)', spec: '16-bit high-resolution I2C ADC with programmable gain PGA', purpose: 'Provides accurate, linear readings of DC voltage and Hall-effect sensors (bypasses noisy ESP32 ADC).', cost: '$4.00' },
+        { 
+          name: 'ESP32-S3 Development Board', 
+          spec: 'Dual-core 240MHz, 4MB Flash, Wi-Fi & BLE', 
+          purpose: 'Core processor, runs ADC sampling, thermistor math, and web API.', 
+          cost: '$6.00',
+          amazonSearch: 'ESP32-S3 development board Type-C'
+        },
+        { 
+          name: 'ACS758 (or ACS712) Current Sensor', 
+          spec: 'Hall-effect current shunt, bidirectional, 50A/100A options', 
+          purpose: 'Measures high-current DC output from the array before inverter input.', 
+          cost: '$8.50',
+          amazonSearch: 'ACS758 current sensor module'
+        },
+        { 
+          name: 'Voltage Divider Network (Custom/Module)', 
+          spec: '100kΩ / 10kΩ metal film precision resistors (0.1% tolerance)', 
+          purpose: 'Steps down high solar DC voltage (e.g. 0-150V) to a safe 0-3.3V range for the ESP32 ADC.', 
+          cost: '$1.00',
+          amazonSearch: 'metal film precision resistors 100k 10k 0.1%'
+        },
+        { 
+          name: 'SCT-013-000 Non-Invasive CT Sensor', 
+          spec: '100A/50mA split-core AC Current Transformer', 
+          purpose: 'Clamped around the inverter output AC live line to calculate output amps safely.', 
+          cost: '$9.00',
+          amazonSearch: 'SCT-013-000 split core current transformer'
+        },
+        { 
+          name: 'ZMPT101B AC Voltage Sensor Module', 
+          spec: 'Active single-phase AC voltage transformer', 
+          purpose: 'Samples live utility line voltage safely for AC output wattage calculation.', 
+          cost: '$4.50',
+          amazonSearch: 'ZMPT101B AC voltage sensor module'
+        },
+        { 
+          name: 'DS18B20 Waterproof Temp Probe', 
+          spec: '1-Wire interface, stainless steel cap', 
+          purpose: 'Clamps directly to PV backsheet to measure cell surface temperature.', 
+          cost: '$3.50',
+          amazonSearch: 'DS18B20 waterproof temperature sensor probe'
+        },
+        { 
+          name: 'ADS1115 External ADC (Recommended)', 
+          spec: '16-bit high-resolution I2C ADC with programmable gain PGA', 
+          purpose: 'Provides accurate, linear readings of DC voltage and Hall-effect sensors (bypasses noisy ESP32 ADC).', 
+          cost: '$4.00',
+          amazonSearch: 'ADS1115 16-bit ADC module I2C'
+        },
       ];
     }
   };
@@ -723,13 +795,28 @@ void handleTelemetryRoute() {
             </div>
             <div className="space-y-3 max-h-[290px] overflow-y-auto pr-1">
               {getBOM().map((item, idx) => (
-                <div key={idx} className="border-b border-slate-800/40 pb-2.5 last:border-b-0 last:pb-0">
+                <div key={idx} className="border-b border-slate-800/40 pb-2.5 last:border-b-0 last:pb-0 flex flex-col gap-1">
                   <div className="flex items-start justify-between gap-2">
                      <span className="font-bold text-slate-200 text-[10px] uppercase">{item.name}</span>
                      <span className="text-emerald-400 font-bold text-[9px]">{item.cost}</span>
                   </div>
-                  <div className="text-[9px] text-slate-400 font-sans font-medium mt-0.5">{item.spec}</div>
-                  <div className="text-[9px] text-slate-500 italic font-sans mt-0.5">{item.purpose}</div>
+                  <div className="text-[9px] text-slate-400 font-sans font-medium">{item.spec}</div>
+                  <div className="text-[9px] text-slate-500 italic font-sans">{item.purpose}</div>
+                  <div className="flex items-center justify-between gap-1.5 mt-0.5 pt-1 border-t border-slate-800/20">
+                    <span className="text-[8px] font-mono text-slate-500 uppercase truncate max-w-[150px] sm:max-w-[200px]">
+                      Key: <span className="text-slate-400">"{item.amazonSearch}"</span>
+                    </span>
+                    <a
+                      href={`https://www.amazon.com/s?k=${encodeURIComponent(item.amazonSearch)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[8px] font-bold text-yellow-500 hover:text-yellow-400 border border-yellow-500/20 hover:border-yellow-400/40 px-1.5 py-0.5 rounded transition-all cursor-pointer bg-yellow-500/5 hover:bg-yellow-500/10"
+                    >
+                      <Search size={8} />
+                      AMAZON
+                      <ExternalLink size={7} />
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

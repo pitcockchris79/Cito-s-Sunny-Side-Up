@@ -26,14 +26,17 @@
         "solarVolts": { "type": "number" },
         "solarAmps": { "type": "number" },
         "solarWatts": { "type": "number" },
+        "inverterVolts": { "type": "number" },
         "inverterAmps": { "type": "number" },
         "inverterWatts": { "type": "number" },
         "efficiency": { "type": "number" },
+        "lossWatts": { "type": "number" },
         "panelTemp": { "type": "number" },
         "gridFreq": { "type": "number" },
         "batterySoC": { "type": "number" },
         "systemMode": { "type": "string", "enum": ["grid-tied", "hybrid", "off-grid"] },
         "weather": { "type": "string" },
+        "notes": { "type": "string" },
         "userId": { "type": "string" }
       },
       "required": ["timestamp", "solarVolts", "solarAmps", "solarWatts", "inverterAmps", "inverterWatts", "efficiency", "userId"]

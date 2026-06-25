@@ -641,3 +641,62 @@ The web portal is pre-engineered to automatically receive real-time streams from
 3. In the **Hardware Integration Options** sidebar, toggle the **Auto-Refresh (Polled API)** mode on.
 4. Input your physical gateway's local IP address into the **Telemetry IP Address Input Field**.
 5. Click **Establish Link**. The web app will establish a secure CORS communication handshake and start feeding live physical data charts in place of simulated records.
+1. Correct Resistor Values for 72V Max PV Input
+
+1. Option A (Highly Recommended & Safest) — Designed for up to 100V Peak
+This option leaves plenty of headroom for extreme winter voltage spikes (
+ rise in freezing temperatures).
+High-side Resistor (
+): 100 kΩ (100,000 ohms)
+Low-side Resistor (
+): 3.3 kΩ (3,300 ohms)
+Actual Voltage Division Ratio: 31.3 (calculated as 
+)
+Performance Metrics:
+At 72V Input: Out-signal is 2.30V (perfectly safe, high resolution).
+At 90V Input (extreme cold weather open-circuit spike): Out-signal is 2.87V (remains safely under the 3.3V max limit).
+Firmware Constant: Change DC_VOLT_DIVIDER_RATIO in your ESP32 code to 31.3.
+Option B (Maximum Resolution) — Designed for up to 80V Peak
+This option maximizes the 16-bit voltage resolution of the ADS1115 but offers less protection against extreme over-voltage spikes.
+High-side Resistor (
+): 100 kΩ (100,000 ohms)
+Low-side Resistor (
+): 4.3 kΩ (4,300 ohms)
+Actual Voltage Division Ratio: 24.25 (calculated as 
+)
+Performance Metrics:
+At 72V Input: Out-signal is 2.97V (uses nearly the entire 0-3V range for maximum precision).
+At 80V Input: Out-signal is 3.30V (reaches the safe maximum input ceiling).
+Firmware Constant: Change DC_VOLT_DIVIDER_RATIO in your ESP32 code to 24.25.
+2. Comprehensive Systems Analysis: Risks, Hurdles, & Unforeseen Issues
+Integrating hardware, firmware, local networks, and a cloud-synced web app (Tauri/React) is a multi-disciplinary challenge. Below is a breakdown of potential problems you might encounter, followed by practical mitigations.
+⚡ Hardware Vulnerabilities & Safe Practices
+The Issue: If your ESP32 is powered via a USB port connected to a laptop that is plugged into a wall outlet, and your solar inverter or battery bank shares a different physical ground, a ground loop will form. Large current flows can travel back up through your ESP32, frying the chip, the sensors, and potentially your laptop's USB port.
+The Solution:
+Isolate the Power: Power your ESP32 from an isolated source (such as a battery pack or a high-quality, isolated step-down buck converter connected directly to your system).
+Isolate the Bus: Use an isolated RS485 transceiver (such as a module containing a magnetic isolator or optocouplers) rather than a direct common-ground transceiver like the basic MAX485.
+The Issue: Precision is highly dependent on resistor quality. Standard carbon film resistors have a 
+ tolerance and can drift with heat. Additionally, solar charge controllers use high-frequency Pulse Width Modulation (PWM) or MPPT switching, which injects severe electrical noise onto the PV lines.
+The Solution:
+Use 0.1% or 1% Metal-Film Resistors for 
+ and 
+ to prevent reading drift.
+Place a 0.1 µF (100nF) ceramic capacitor in parallel with the low-side resistor (
+). This forms a low-pass filter that cleans up switching noise before the ADC reads it.
+The Issue: 72V DC is high enough to sustain an electric arc. A short circuit on the breadboard could trigger a fire or melt components instantly.
+The Solution: Install a fast-acting 1A fuse inline on the positive lead right at the tap point of your solar panel or battery, before the long wire runs to your sensing board.
+🌐 Software & Networking Boundaries
+The Issue: When you deploy this React app to Google Cloud Run, it serves over a secure https:// connection. If your app attempts to poll the ESP32 directly via its local home IP address (e.g., http://192.168.1.145/api/telemetry), the browser will block the request under security guidelines called "Mixed Content Blockers."
+The Solution:
+Tauri Desktop App: Running your app within Tauri circumvents this because Tauri operates on a custom protocol (tauri:// or asset://) where standard browser security sandboxing is disabled, allowing direct local HTTP requests.
+Cloud Inversion (Push instead of Pull): Instead of the web dashboard requesting data from the ESP32, program the ESP32 to push its data directly up to your Firebase Firestore database every 5 seconds. The React client then simply listens to Firestore updates. This resolves all local IP routing issues and allows you to view your telemetry anywhere in the world!
+The Issue: If your home internet goes down, or the gateway is situated out of range of your router, the ESP32 will hang, blocking loop execution, or telemetry data will simply be lost forever.
+The Solution:
+Implement non-blocking Wi-Fi reconnect attempts in your firmware (WiFi.setAutoReconnect(true)).
+Unforeseen Feature: Add a MicroSD card breakout module or utilize the ESP32's internal SPIFFS/LittleFS storage. If the Wi-Fi connection fails, log your telemetry locally. Once internet connectivity is restored, push the cached offline records up to Firestore.
+🔍 User Errors & Deployment Pitfalls
+Wiring Swap on RS485: The A(+) and B(-) lines on different manufacturers' RS485 modems are notoriously mislabeled or inverted (sometimes labeled Tx/Rx, +/- or D+/D-). If you cannot establish a Modbus handshake, swap the A and B wires. This is harmless and fixes communication 90% of the time.
+MAX485 Flow Control Timing: The basic MAX485 chip requires you to manually pull the DE (Driver Enable) and RE (Receiver Enable) pins High to transmit, and Low to receive. If your firmware timing is off by even a few microseconds, it will truncate the Modbus packet.
+Tip: Buy a MAX485 module with automatic flow control (typically red modules with 5 pins on the TTL side). They handle the TX/RX switching automatically in hardware, requiring only TX, RX, VCC, and GND pins.
+
+

@@ -125,8 +125,14 @@ export default function App() {
                 localLogs.forEach((log) => {
                   const logDocRef = doc(db, 'users', firebaseUser.uid, 'logs', log.id);
                   const { id, ...logData } = log;
+                  const cleanedLogData: Record<string, any> = {};
+                  Object.entries(logData).forEach(([key, val]) => {
+                    if (val !== undefined) {
+                      cleanedLogData[key] = val;
+                    }
+                  });
                   batch.set(logDocRef, {
-                    ...logData,
+                    ...cleanedLogData,
                     userId: firebaseUser.uid
                   });
                 });
@@ -347,8 +353,14 @@ export default function App() {
       
       if (auth.currentUser) {
         const { id, ...logData } = newLiveLog;
+        const cleanedLogData: Record<string, any> = {};
+        Object.entries(logData).forEach(([key, val]) => {
+          if (val !== undefined) {
+            cleanedLogData[key] = val;
+          }
+        });
         setDoc(doc(db, 'users', auth.currentUser.uid, 'logs', newLiveLog.id), {
-          ...logData,
+          ...cleanedLogData,
           userId: auth.currentUser.uid
         }).catch(err => {
           console.error("Error saving live log to Firestore:", err);
@@ -392,8 +404,14 @@ export default function App() {
     if (auth.currentUser) {
       try {
         const { id, ...logData } = log;
+        const cleanedLogData: Record<string, any> = {};
+        Object.entries(logData).forEach(([key, val]) => {
+          if (val !== undefined) {
+            cleanedLogData[key] = val;
+          }
+        });
         await setDoc(doc(db, 'users', auth.currentUser.uid, 'logs', logId), {
-          ...logData,
+          ...cleanedLogData,
           userId: auth.currentUser.uid
         });
       } catch (err) {
@@ -455,8 +473,14 @@ export default function App() {
         seededLogs.forEach((log) => {
           const logDocRef = doc(db, 'users', auth.currentUser!.uid, 'logs', log.id);
           const { id, ...logData } = log;
+          const cleanedLogData: Record<string, any> = {};
+          Object.entries(logData).forEach(([key, val]) => {
+            if (val !== undefined) {
+              cleanedLogData[key] = val;
+            }
+          });
           batch.set(logDocRef, {
-            ...logData,
+            ...cleanedLogData,
             userId: auth.currentUser!.uid
           });
         });
